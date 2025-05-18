@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jogo da Forca - Palavra Única</title>
+<style>
+  body {
+    background: #222;
+    color: #eee;
+    font-family: Arial, sans-serif;
+    text-align: center;
+    padding: 20px;
+  }
+  #word {
+    font-size: 32px;
+    letter-spacing: 10px;
+    margin: 20px 0;
+  }
+  #letters {
+    margin: 20px 0;
+  }
+  .letter-btn {
+    background: #444;
+    border: none;
+    color: white;
+    font-size: 20px;
+    margin: 5px;
+    padding: 10px 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    user-select: none;
+    transition: background 0.3s;
+  }
+  .letter-btn:disabled {
+    background: #999;
+    cursor: default;
+  }
+  #message {
+    font-size: 24px;
+    margin-top: 20px;
+  }
+  #resetBtn {
+    margin-top: 30px;
+    padding: 12px 24px;
+    font-size: 18px;
+    background: #4caf50;
+    border: none;
+    border-radius: 6px;
+    color: white;
+    cursor: pointer;
+  }
+  /* Narrativa style */
+  #narrativa {
+    position: fixed;
+    inset: 0;
+    background: black;
+    color: white;
+    font-size: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 30px;
+    text-align: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 1s ease;
+    z-index: 10;
+  }
+  #narrativa.visivel {
+    opacity: 1;
+    pointer-events: auto;
+  }
+</style>
+</head>
+<body>
+
+<h1>Jogo da Forca</h1>
+<div id="word"></div>
+<div id="letters"></div>
+<div id="message"></div>
+<button id="resetBtn">Reiniciar Jogo</button>
+
+<!-- Narrativa -->
+<div id="narrativa">
+  <p>Ela acabou voltando para mim... Ela me faz tão feliz.</p>
+</div>
+
+<script>
+  const palavraEscolhida = "solidao";
+
+  let letrasCorretas = [];
+  let letrasErradas = [];
+  const maxErros = 6;
+
+  const wordDiv = document.getElementById("word");
+  const lettersDiv = document.getElementById("letters");
+  const messageDiv = document.getElementById("message");
+  const resetBtn = document.getElementById("resetBtn");
+  const narrativa = document.getElementById("narrativa");
+
+  function mostrarPalavra() {
+    let display = "";
+    for (let letra of palavraEscolhida) {
+      display += letrasCorretas.includes(letra) ? letra.toUpperCase() + " " : "_ ";
+    }
+    wordDiv.textContent = display.trim();
+  }
+
+  function criarTeclado() {
+    lettersDiv.innerHTML = "";
+    for (let i = 65; i <= 90; i++) {
+      const btn = document.createElement("button");
+      btn.classList.add("letter-btn");
+      btn.textContent = String.fromCharCode(i);
+      btn.addEventListener("click", () => letraClicada(btn.textContent.toLowerCase()));
+      lettersDiv.appendChild(btn);
+    }
+  }
+
+  function letraClicada(letra) {
+    if (letrasCorretas.includes(letra) || letrasErradas.includes(letra)) return;
+
+    if (palavraEscolhida.includes(letra)) {
+      letrasCorretas.push(letra);
+      mostrarPalavra();
+      checarVitoria();
+    } else {
+      letrasErradas.push(letra);
+      atualizarMensagem();
+      checarDerrota();
+    }
+    atualizarBotao(letra);
+  }
+
+  function atualizarBotao(letra) {
+    const buttons = lettersDiv.querySelectorAll("button");
+    buttons.forEach(btn => {
+      if (btn.textContent.toLowerCase() === letra) {
+        btn.disabled = true;
+        btn.style.backgroundColor = palavraEscolhida.includes(letra) ? "#4caf50" : "#f44336";
+      }
+    });
+  }
+
+  function atualizarMensagem() {
+    messageDiv.textContent = `Erros: ${letrasErradas.length} de ${maxErros}`;
+  }
+
+  function checarVitoria() {
+    const ganhou = palavraEscolhida.split("").every(letra => letrasCorretas.includes(letra));
+    if (ganhou) {
+      messageDiv.textContent = "Parabéns! Você venceu!";
+      desabilitarTeclado();
+      mostrarNarrativa();
+    }
+  }
+
+  function checarDerrota() {
+    if (letrasErradas.length >= maxErros) {
+      messageDiv.textContent = `Você perdeu! A palavra era: ${palavraEscolhida.toUpperCase()}`;
+      mostrarPalavraCompleta();
+      desabilitarTeclado();
+    }
+  }
+
+  function mostrarPalavraCompleta() {
+    let display = "";
+    for (let letra of palavraEscolhida) {
+      display += letra.toUpperCase() + " ";
+    }
+    wordDiv.textContent = display.trim();
+  }
+
+  function desabilitarTeclado() {
+    const buttons = lettersDiv.querySelectorAll("button");
+    buttons.forEach(btn => btn.disabled = true);
+  }
+
+  function reiniciarJogo() {
+    letrasCorretas = [];
+    letrasErradas = [];
+    messageDiv.textContent = "";
+    narrativa.classList.remove("visivel");
+    mostrarPalavra();
+    criarTeclado();
+    atualizarMensagem();
+  }
+
+  function mostrarNarrativa() {
+    narrativa.classList.add("visivel");
+    // Após 5 segundos, salva progresso e redireciona
+    setTimeout(() => {
+      localStorage.setItem("progresso", "5"); // mesmo progresso da fase 2
+      window.location.href = "index.html";
+    }, 5000);
+  }
+
+  resetBtn.addEventListener("click", reiniciarJogo);
+
+  reiniciarJogo();
+</script>
+
+</body>
+</html>
